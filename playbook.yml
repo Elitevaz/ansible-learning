@@ -1,0 +1,47 @@
+---
+- name: Setup System Runbook and Email Diagnostics
+  hosts: ubuntu_servers
+  gather_facts: no
+
+  tasks:
+    # 1. Create the target folder on the server
+    - name: Ensure runbooks directory exists
+      file:
+        path: "~/runbooks"
+        state: directory
+
+        # 2. Build the visual System Health Report file with live stats
+    - name: Generate the system health dashboard report
+      shell: |
+        mkdir -p ~/runbooks
+        echo "==================================================" > ~/runbooks/system_health_report.txt
+        echo "         AUTOMATED SYSTEM HEALTH REPORT           " >> ~/runbooks/system_health_report.txt
+        echo "==================================================" >> ~/runbooks/system_health_report.txt
+        echo "Generated on: $(date)" >> ~/runbooks/system_health_report.txt
+        echo "" >> ~/runbooks/system_health_report.txt
+        echo "--- 1. SYSTEM UPTIME & LOAD ---" >> ~/runbooks/system_health_report.txt
+        uptime >> ~/runbooks/system_health_report.txt
+        echo "" >> ~/runbooks/system_health_report.txt
+        echo "--- 2. MEMORY USAGE (MB) ---" >> ~/runbooks/system_health_report.txt
+        free -m >> ~/runbooks/system_health_report.txt
+        echo "" >> ~/runbooks/system_health_report.txt
+        echo "--- 3. HARD DRIVE DISK SPACE ---" >> ~/runbooks/system_health_report.txt
+        df -h / >> ~/runbooks/system_health_report.txt
+        echo "==================================================" >> ~/runbooks/system_health_report.txt
+        cat ~/runbooks/system_health_report.txt
+      register: report_output
+
+    # 3. Print the live server stats directly onto your Mac screen
+    - name: Print health report to Mac console
+      debug:
+        msg: "{{ report_output.stdout_lines }}"
+
+    # 4. Install email packages securely (This requires root/sudo)
+    - name: Install email packages via apt
+      apt:
+        name:
+          - ssmtp
+          - mailutils
+        state: present
+        update_cache: yes
+      become: yes # This triggers the secure password prompt!
