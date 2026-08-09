@@ -1,0 +1,10 @@
+#!/bin/bash
+# Automatically generated via Ansible
+
+# 1. Grab the current disk use percentage as a raw number
+DISK_USAGE=$(df / | awk 'NR==2 {print $5}' | sed 's/%//')
+
+# 2. If disk use is greater than 80%, fire off the secure alert email
+if [ "$DISK_USAGE" -gt 80 ]; then
+  echo -e "Subject: ALERT: Ubuntu Server Disk Space Critical!\n\nYour local Ubuntu server disk usage is currently at ${DISK_USAGE}%." | ssmtp {{ alert_email_recipient }}
+fi

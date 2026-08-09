@@ -3,6 +3,9 @@
   hosts: ubuntu_servers
   gather_facts: no
 
+  vars_files:
+    - secret_vars.yml
+
   tasks:
     # 1. Create the target folder on the server
     - name: Ensure runbooks directory exists
@@ -45,3 +48,22 @@
         state: present
         update_cache: yes
       become: yes # This triggers the secure password prompt!
+
+      - name: Inject secure SSMTP mail server configuration
+      copy:
+        content: |
+          root=postmaster
+          mailhub=://gmail.com
+          AuthUser={{ smtp_user }}
+          AuthPass={{ smtp_pass }}
+          UseSTARTTLS=YES
+          FromLineOverride=YES
+        dest: /etc/ssmtp/ssmtp.conf
+        mode: '0640'
+      become: yes
+
+    - name: Inject and authorize background monitoring script
+      template:
+        src: disk_alert.sh.j2
+        dest: ~/runbooks/disk_alert.sh
+        mode: '0755' # This automatically makes the script executable!
