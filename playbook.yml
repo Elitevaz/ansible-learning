@@ -67,3 +67,11 @@
         src: disk_alert.sh.j2
         dest: ~/runbooks/disk_alert.sh
         mode: '0755' # This automatically makes the script executable!
+
+    - name: Schedule background hourly disk space monitoring cron job
+      cron:
+        name: "Check Ubuntu Server Disk Space Alert"
+        minute: "0"                  # "0" means it triggers exactly at the top of every hour
+        hour: "*"                    # "*" means every single hour of the day
+        job: "/home/{{ ansible_user | default('ubuntu') }}/runbooks/disk_alert.sh"
+        state: present
